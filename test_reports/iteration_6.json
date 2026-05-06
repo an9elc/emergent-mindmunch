@@ -1,0 +1,36 @@
+{
+  "summary": "Iteration 6 retest PASSED. All three iteration-5 regressions are now fully fixed on the live preview. (1) Home title 'Let's learn something new' now computes fontWeight=600, maxWidth=260px and wraps cleanly onto two lines (width=260). (2) Home Balance card renders a LinearGradient(120deg, rgb(110,168,255) -> rgb(47,91,255) -> rgb(30,58,138)) — the blue brand gradient — with the translucent dark inner panel containing points-value (214 pts) and redeem-shortcut. (3) Wallet redeem tiles are now a horizontal ScrollView of four 266x220 large rounded tiles with all required testIDs (redeem-150, redeem-300, redeem-600, redeem-1200); each shows emoji, locked/unlocked badge, '+N minutes' title, points subtitle, and an in-card Redeem button. Regression checks: backend 34/34 pytest still pass; wallet has no theme-toggle testID (count=0); open-settings row navigates to /settings where settings-light, settings-dark and settings-back all function and dark/light toggle works; Discover, Practice, Social, Home tabs all navigate without red-screen errors.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [],
+    "react_native_issues": [
+      {"component": "app/index.tsx (onboarding) + general shadows() helper", "issue": "Non-blocking console warning still present on web: '\"shadow*\" style props are deprecated. Use \"boxShadow\".' Also one warning: 'props.pointerEvents is deprecated. Use style.pointerEvents' (home grain overlay View). Functionality unaffected — carried over, can be batched into a style-migration task."}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iteration4.py",
+    "/app/backend/tests/test_focuslearn_api.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "No blocking action items. Iteration 5 regressions are resolved.",
+    "(Low priority, carry-over) Migrate shadow* style props to boxShadow and move pointerEvents from prop to style in home.tsx grain View to silence RNW deprecation warnings."
+  ],
+  "critical_code_review_comments": [
+    "Home pointsCard now correctly mounts <LinearGradient style={StyleSheet.absoluteFill}> and the dotted grain overlay — dead-import smell from iter 5 is gone.",
+    "Wallet redeem tiles array is still inline in JSX (4 items). Fine now, but if a 5th tier is ever added, consider lifting to a REDEEM_TIERS module constant for discoverability.",
+    "server.py size not re-checked this iteration — splitting routers remains a non-blocking tech-debt item."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "100% (34/34)", "frontend": "100% of iteration-6 verification items (home title weight/maxWidth, balance gradient, 4 wallet tiles with correct size and testIDs, no theme-toggle on wallet, open-settings -> /settings -> theme radios + back, tab regressions)"},
+  "seed_data_creation": "None this iteration. Profile currently: username 'AAAAAAAAAA...' (long test string from earlier run, non-blocking), points 214, total_earned 1114, level 12, 90m redeemed. If clean display is needed in demos, PATCH /api/profile {\"username\":\"Friend\"}.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "All three iteration-5 visual regressions (home title weight, home blue gradient balance card, wallet 4-tile horizontal redeem layout) are verified fixed on https://focuslearn-17.preview.emergentagent.com. Backend 34/34 green. Onboarding still requires 'Skip'. Settings reachable only via Wallet -> 'App settings' (testID open-settings). Minor remaining: RNW 'shadow*' deprecation warnings in console — cosmetic only.",
+  "rca_of_issue": "Not applicable — this iteration is a successful verification of fixes from iteration 5. Iteration 5 failures were confirmed to be JSX gaps (LinearGradient imported but not mounted, wallet redeem array hardcoded to 3 old rows, title fontWeight shipped as 800 without maxWidth). Current build mounts LinearGradient+grain overlay, renders the 4-tile horizontal redeem ScrollView with matching testIDs and dimensions, and sets title fontWeight:600 + maxWidth:260. Verification evidence: computed styles and bounding-box measurements captured via page.evaluate (fontWeight=600, maxWidth=260px, gradient present, tile sizes 266x220), plus screenshots /tmp/home_iter6.png and /tmp/wallet_iter6.png."
+}

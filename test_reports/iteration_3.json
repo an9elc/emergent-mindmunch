@@ -1,0 +1,36 @@
+{
+  "summary": "Iteration 3 testing passed. Backend: 21/21 pytest pass (100%) — no regressions across health, profile, screen-time, study-sets CRUD + save + saved filter, quiz start/answer/complete, rewards redeem, blocked-apps. Frontend (mobile 390x844) verified on preview URL: (a) Home oversized-bento hero renders with outer soft colored bento labeled 'Balance' + inner dark POINTS BALANCE card containing '25 pts', '45 min redeemed · 475 earned' + Redeem button (testIDs points-balance-card, points-value, redeem-shortcut present). (b) Marketplace rebuilt as bento: oversized rounded search bento + multi-color filter chips (filter-chip-Recent/Saved/Biology/Math etc present; Biology=green, Chemistry=purple, Computer Science=purple accent), 'Featured sets' horizontal carousel with 4 colored tiles (testIDs featured-TEST_Custom Set, featured-SAT Vocabulary [yellow], featured-World Geography, featured-Chemistry: Periodic Table), 'All sets' list with 13 studyset-card-* rows and per-subject colored avatars. Preview modal opens with preview-title, preview-save-wallet, preview-study-now, preview-save-btn. Save-to-wallet toggles text from 'Save to wallet' to 'In wallet'. (c) Flashcard flip on /studyset/{id}: front shows black card with flashcard-term 'Ephemeral', blue reveal-answer-btn; after tap, back face shows flashcard-definition ('Lasting for a very short time.') with 3 self-assessment buttons assess-got-it (green), assess-more-help (yellow), assess-not-quite (red) AND continue-card-btn all rendered; tapping assess-got-it advances to flashcard #2 (term becomes 'Ubiquitous', progress bar segment 2 highlights). (d) Quiz: quiz-subject-pill (blue 'language'), quiz-progress-bar (segmented, 1/5 highlighted), 2x2 quiz-option-0..3 grid, quiz-submit-button enabled after select; after submit the correct option (Ephemeral) highlights green, wrong (Ubiquitous) highlights red/pink, explanation renders 'not quite - …Ephemeral describes something that lasts only briefly'; quiz-next-button becomes enabled and advances to question 2. (e) Onboarding → tabs navigation still works; no React Native red-screen or page errors.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "home/index", "issues": ["Existing deprecation warnings 'shadow*' style props + 'props.pointerEvents is deprecated' carried over from prior iterations — cosmetic only, no functional impact."]}
+    ],
+    "react_native_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_focuslearn_api.py",
+    "/app/backend/tests/test_save_feature.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "(Optional, carried over) Replace deprecated 'shadow*' style props with 'boxShadow' on app/index.tsx and theme shadows() to silence console warnings.",
+    "(Optional) Add is_saved field to StudySet Pydantic model in server.py (still silently stripped on list/get responses; UI currently works because it re-fetches single doc for the preview modal)."
+  ],
+  "critical_code_review_comments": [
+    "StudySet Pydantic model in server.py still lacks 'is_saved' — toggle_save persists it but StudySet(**d) drops it on list/get responses. Frontend preview modal reads is_saved from its own local state after POST /save, so functional today; add 'is_saved: bool = False' to the model for robustness.",
+    "Marketplace featured-<title> and studyset-card-<title> use raw titles (including spaces and punctuation) for testIDs; works but could collide if two sets share a title — current DB has duplicate 'TEST_Custom Set' entries producing 3 identical testIDs (query_selector_all returns 3). Consider using id instead of title for testID suffix.",
+    "theme.ts SUBJECT_ACCENTS palette + subjectAccent helper visually confirmed (Biology=green, Language=yellow, Chemistry=purple, Geography=blue/green etc.); no issues."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "100% (21/21)", "frontend": "100% of iteration-3 testIDs + flows verified"},
+  "seed_data_creation": "No new seed data created this iteration. DB still contains the prior 3 'TEST_Custom Set' entries from earlier iterations. Pytest cleanup remains intact.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "All iteration-3 UX polish + bento redesign + flashcard flip + quiz animations verified on mobile 390x844. To test flashcards, navigate directly to /studyset/{id} (onboarding may intercept if cookie not set — dismiss via onboarding-start-button first). Practice tab cards have testID 'practice-card-<title>'; marketplace cards use 'studyset-card-<title>'. Opening preview via card → preview-study-now routes to /studyset/{id}. Confetti + spring animations are visual only, not asserted. Duplicate TEST_Custom Set titles produce duplicate testIDs — use id-based testIDs if this becomes a problem.",
+  "rca_of_issue": "No bugs found. Note: initial Playwright attempt to click Marketplace tab via text selector matched the 'Marketplace' header; correct approach is either testID on the tab icon, or direct URL navigation to /marketplace — used URL approach. Also flashcard-progress uses visual segments (no text content) so comparing innerText returns '' both before and after advance; verified advancement by comparing flashcard-term text ('Ephemeral' → 'Ubiquitous')."
+}

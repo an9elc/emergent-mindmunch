@@ -1,0 +1,48 @@
+{
+  "summary": "Iteration 5 testing complete. Backend: 34/34 pytest tests pass (no regression from iter 4). Frontend: Discover runtime error FIXED and renders fully (Hi+greeting, search bento, chips, Featured carousel, All sets). /settings route works (settings-light/dark/back all functional; dark mode toggles). theme-toggle correctly removed from Wallet. Quiz option testIDs work and reveal green/blue states. HOWEVER three iteration-5 visual specs were NOT fully implemented in the shipped code: (b) wallet redemption redesign missing (no 4th tier 'redeem-1200', tiles still old rectangular 342x80 rows, no horizontal swipe, no square 266x220 cards, no in-card Redeem button pattern); (d) home blue gradient balance card not rendered — LinearGradient is imported but never used in JSX, pointsCard has no background (appears transparent/dark); (c) home title uses fontWeight '800' (spec: 600) and has no maxWidth:260 so 'Let's learn something new' overflows to the right edge on 390px viewport. Quiz option cards are height 160px (spec: min 210px) — minor. These are shipped-code gaps, not test-environment issues.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "(tabs)/wallet.tsx redemption section", "issue": "Iteration 5 redesign NOT shipped. Missing testID 'redeem-1200' (only 150/300/600 rendered). Tiles are still the OLD vertical rectangular rows (rendered 342x80) instead of horizontally-swipable large rounded square cards (spec: width 266, min-height 220) with in-card Redeem button. Confirmed in /app/frontend/app/(tabs)/wallet.tsx lines 97-116 — hardcoded 3-item array [{150},{300},{600}] in a plain map, no horizontal ScrollView, no big-tile styles.", "testID": "redeem-1200 (MISSING), redeem-150/300/600 (present but wrong layout)", "priority": "CRITICAL"},
+      {"component": "(tabs)/home.tsx pointsCard (Balance card)", "issue": "Blue grainy LinearGradient (#6EA8FF→#2F5BFF→#1E3A8A) from spec (d) is NOT rendered. LinearGradient is imported at line 5 but never used in the JSX tree. The pointsCard style (lines 204-207) has NO backgroundColor set, so the card body is transparent and only the translucent dark pointsInner panel is visible — giving a grey/dark appearance instead of the intended blue gradient. Also no dotted grain overlay (the 'grain' style at line 208 is defined but never mounted).", "testID": "points-balance-card", "priority": "HIGH"},
+      {"component": "(tabs)/home.tsx title", "issue": "Spec (c) says fontWeight 600 with maxWidth 260 so 'Let's learn something new' wraps to two lines. Actual style (line 202): fontWeight '800', fontSize 28, no maxWidth. Result: title renders on a single line and overflows past the right edge on 390px viewport (visible in screenshot /tmp/03_home.png).", "testID": "home-header", "priority": "MEDIUM"},
+      {"component": "quiz/[id].tsx option cards", "issue": "Spec (a) says min-height 210px for quiz option cards. Measured actual height: 160px for all 4 options. Functionality (black idle, blue selected, green correct reveal, next button) works correctly — only the height is off.", "testID": "quiz-option-0..3", "priority": "LOW"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "home", "issues": ["Balance card is visually grey/dark, not the blue brand gradient spec intended.", "Header title overflows screen width due to missing maxWidth."]},
+      {"screen": "wallet", "issues": ["Redemption tiles still use the pre-iteration-5 layout; visual hierarchy intended for 'one tile ~ size of 3 old rectangular ones combined' is not achieved."]}
+    ],
+    "react_native_issues": [
+      {"component": "app/index.tsx (onboarding)", "issue": "Console warning repeats: '\"shadow*\" style props are deprecated. Use \"boxShadow\".' — carried over from iteration 4, still not migrated."}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iteration4.py",
+    "/app/backend/tests/test_focuslearn_api.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "Wallet: implement the iteration-5 redemption tile redesign. Replace the 3-item map in /app/frontend/app/(tabs)/wallet.tsx (lines 97-116) with a horizontal ScrollView of 4 large rounded square TouchableOpacity tiles (width 266, min-height 220) for tiers 150/300/600/1200; add testIDs redeem-150, redeem-300, redeem-600, redeem-1200; each tile should show locked/unlocked badge, big minutes title, points subtitle and an in-card Redeem button.",
+    "Home: wrap the pointsCard contents in a <LinearGradient colors={['#6EA8FF','#2F5BFF','#1E3A8A']} start={{x:0,y:0}} end={{x:1,y:1}} style={s.pointsCard}> and mount the dotted grain overlay (the s.grain style is defined but never used). Currently LinearGradient is imported but unused.",
+    "Home: set title fontWeight to '600' (not '800') and add maxWidth: 260 on s.title so 'Let's learn something new' wraps to two lines instead of overflowing.",
+    "Quiz: bump minHeight of quiz option cards to 210 (currently renders 160) to match spec (a) — functionality is otherwise correct.",
+    "(Carried over from iter 4) Replace deprecated shadow* style props with boxShadow in app/index.tsx for React Native Web compatibility."
+  ],
+  "critical_code_review_comments": [
+    "/app/frontend/app/(tabs)/home.tsx: LinearGradient is imported (line 5) but not rendered anywhere — dead import masking an un-implemented feature. Lint should flag unused imports.",
+    "/app/frontend/app/(tabs)/home.tsx: 'grain' style (line 208) is defined but never mounted in the JSX tree — same situation; suggests partial implementation was merged.",
+    "/app/frontend/app/(tabs)/wallet.tsx: the redemption tier array is hardcoded inline (line 97); moving it to a module-level constant with all 4 tiers (150/300/600/1200) would have made the spec deviation obvious at PR time.",
+    "server.py remains ~655 lines; splitting quiz/flashcard/social routers is still recommended but non-blocking."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "100% (34/34)", "frontend": "Functional testIDs: 9/10 present (redeem-1200 missing). Visual specs: 3 of 6 iteration-5 items implemented as described (discover fix, settings route, theme-toggle removal). 3 items partially/not implemented (wallet redesign, home gradient, home title weight+maxWidth)."},
+  "seed_data_creation": "Reset profile username to 'Friend' via PATCH /api/profile (was 24-char 'AAAA...' from iter 4). Points currently 159, total_earned 909, 75 min redeemed. Many TEST_Custom Set entries remain in db.study_sets from previous test runs — consider a cleanup task; they don't block testing but clutter the Discover/Practice lists.",
+  "retest_needed": true,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Preview URL https://focuslearn-17.preview.emergentagent.com. Onboarding splash still requires tapping 'Skip'. Practice tab flow: tap Practice → tap 'Quiz' mode card → tap a study set name (e.g., 'SAT Vocabulary') — this auto-starts the quiz (no separate 'Start quiz' button). AI quiz generation takes ~5s, wait up to 30s. Settings route is reachable only via Wallet → 'App settings' row (testID='open-settings'); back button testID='settings-back' returns. All 34 backend tests green — re-run with: `pytest /app/backend/tests/test_iteration4.py /app/backend/tests/test_focuslearn_api.py -v`. After main agent fixes the 4 action items, retest wallet tiles + home balance card specifically.",
+  "rca_of_issue": "Wallet redemption redesign (spec b) and Home blue-gradient balance card (spec d) appear to have been specified in the prompt but never materially implemented in the commit: /app/frontend/app/(tabs)/wallet.tsx still uses the old three-row rectangular layout without the 1200-tier, and /app/frontend/app/(tabs)/home.tsx imports LinearGradient + defines a 'grain' style but never mounts either in the JSX. Home title weight (spec c) shipped at '800' instead of '600' and missed the maxWidth:260, causing visible overflow. These are classic 'commit dropped the JSX changes but kept the imports' symptoms — likely a bad merge/rebase. Reproduction: open /wallet and compare rendered tiles vs the four-tile horizontal swipe described in the problem statement; open /home and inspect the pointsCard — it has no gradient background. Mitigation: apply the four action items listed above."
+}

@@ -1,0 +1,47 @@
+{
+  "summary": "Iteration 4 testing complete. Backend: 34/34 pytest tests pass (profile PATCH + new fields, flashcard session lifecycle with got_it/more_practice/not_quite re-queue semantics, practice vs lock_challenge point rates, social leaderboard with exactly 1 is_me, all regression endpoints). Frontend: 5-tab nav + Home/Practice/Flash/Quiz/Wallet/Social/Discover all render and integrate correctly. Flashcard flip + self-assess advance works; edit-name modal persists via PATCH /api/profile; leaderboard shows 4 seeded + 1 me row; referral code visible. A few minor UI polish issues noted below.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "(tabs)/discover.tsx header", "issue": "Tab label was renamed to 'Discover' but the in-screen header still reads 'Marketplace' — inconsistent with the nav label and iteration-4 spec (c).", "testID": "n/a (screen header Text)", "priority": "LOW"},
+      {"component": "(tabs)/discover.tsx greeting", "issue": "'Hi, {username}' on Discover showed stale 'Focus Learner' even after PATCH /api/profile updated username to 'Explorer' elsewhere (social/wallet reflected new name). Likely missing refetch-on-focus in discover screen.", "testID": "n/a", "priority": "LOW"},
+      {"component": "(tabs)/wallet.tsx profile-name", "issue": "When username is at max length (24 chars) it overflows the profile bento on a 390px viewport (no numberOfLines/truncation on profile-name Text). Repro: PATCH /api/profile with 24 chars -> wallet header visibly overflows.", "testID": "profile-name", "priority": "LOW"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "wallet", "issues": ["profile-name Text has no numberOfLines={1} ellipsizeMode='tail' — long usernames clip off-screen."]}
+    ],
+    "react_native_issues": [
+      {"component": "app/index.tsx", "issue": "Repeated warning: '\"shadow*\" style props are deprecated. Use \"boxShadow\".' at app/index.tsx:58:21. Not breaking, but should migrate to boxShadow for React Native Web compatibility."}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iteration4.py",
+    "/app/backend/tests/test_focuslearn_api.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "Rename the Discover screen header text from 'Marketplace' to 'Discover' to match the tab label & spec.",
+    "Refetch profile on Discover tab focus (useFocusEffect) so greeting updates after username edit.",
+    "Add numberOfLines={1} + ellipsizeMode='tail' on wallet profile-name Text to handle long usernames.",
+    "Replace deprecated shadow* style props in app/index.tsx:58 with boxShadow (React Native Web)."
+  ],
+  "critical_code_review_comments": [
+    "server.py is ~655 lines — approaching the 700-line guideline; consider splitting flashcard_sessions, quiz_sessions, and social routers into separate modules.",
+    "generate_quiz_questions uses random.shuffle and the fallback path relies on module-level random — deterministic seeding from screen_time could leak into test runs; acceptable for MVP.",
+    "FlashReview validates outcome inline with string comparisons; consider Literal['got_it','more_practice','not_quite'] for Pydantic-level validation."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_focuslearn_api.py (updated expected practice-mode points: 5*7+38=73)",
+    "/app/backend/tests/test_iteration4.py (new file: 16 tests covering profile PATCH, flashcard lifecycle, quiz-mode points, leaderboard)"
+  ],
+  "success_rate": {"backend": "100% (34/34)", "frontend": "100% of in-scope flows tapped; 3 minor cosmetic/polish issues"},
+  "seed_data_creation": "No new seed data. PATCH /api/profile left the profile username as 'Explorer' at end of UI run; earlier backend truncation test set it to 24-char 'A' string which surfaced the overflow UI bug. You may want to reset username to 'Friend' via PATCH if desired.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Preview URL https://focuslearn-17.preview.emergentagent.com. Onboarding splash requires tapping 'Skip' or 'Get Started' before tabs render. Backend tests rely on EXPO_PUBLIC_BACKEND_URL env var (set in /app/frontend/.env). Run: pytest backend/tests/test_iteration4.py backend/tests/test_focuslearn_api.py -v. Profile username will be left as 'Explorer' after the UI run.",
+  "rca_of_issue": "Discover screen still shows 'Marketplace' header because the (tabs)/discover.tsx file was copied/renamed from marketplace.tsx but the <Text> title inside the screen body was not updated. Likely fix: change the header Text literal from 'Marketplace' to 'Discover' in /app/frontend/app/(tabs)/discover.tsx."
+}

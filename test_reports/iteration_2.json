@@ -1,0 +1,37 @@
+{
+  "summary": "Iteration 2 testing passed. Backend: 21/21 pytest pass (100%) — 18 previous tests remain green + 3 new tests for POST /api/study-sets/{id}/save (404 on invalid id, toggle true→false persistence) and GET /api/study-sets?saved=true filter. Frontend: All new iteration-2 UI verified on mobile viewport 390x844. Preview modal opens from marketplace cards showing emoji cover, title, subject, author, sample cards (testID='preview-card-0..3'), preview-title, preview-save-wallet, preview-study-now, preview-save-btn (bookmark). Tapping Save to Wallet flips state to 'In wallet'. Saved filter chip (testID='filter-chip-Saved') narrows list to saved sets (1 card after saving 1). Profile Wallet section lists saved sets (testID='wallet-item-*'). Theme toggle flips bg from light #F4F8FA to dark #0E1324 (confirmed rgb(14,19,36) and primary rgb(107,140,255)); dark colors remain after full page reload, confirming AsyncStorage persistence. Flashcards redesigned: testIDs flashcard-progress, flashcard-card, flashcard-term ('Ephemeral'), reveal-answer-btn present; after reveal, flashcard-definition + assess-got-it/more-help/not-quite + continue-card-btn all render; continue advances to 'flashcard #2' with progress bar update. Quiz redesigned: quiz-subject-pill (blue 'biology'), quiz-progress-bar (segmented), quiz-option-0..3 (2x2 grid), quiz-submit-button, quiz-next-button all present; selected option turns dark; correct answer highlights green, next button enabled. SF Pro font applied (FONT_FAMILY).",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "home/index", "issues": ["Existing deprecation warning 'shadow*' style props — cosmetic only, carried over from iteration 1."]}
+    ],
+    "react_native_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_focuslearn_api.py",
+    "/app/backend/tests/test_save_feature.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "(Optional, carried over) Replace deprecated 'shadow*' style props with 'boxShadow' on app/index.tsx and theme shadows().",
+    "(Optional) StudySet response model does not include is_saved field (see Pydantic model), so preview modal relies on freshly-fetched doc; works today but consider adding is_saved to StudySet Pydantic model for clarity."
+  ],
+  "critical_code_review_comments": [
+    "StudySet Pydantic model in server.py lacks an 'is_saved' field but is_saved is written to Mongo by POST /save and read via the filter. The list endpoint returns via StudySet(**d) which silently drops is_saved. The frontend reads is_saved from StudySet responses — currently works because extra fields pass through UI but is fragile; add 'is_saved: bool = False' to StudySet.",
+    "toggle_save endpoint does not return 200 body including the full StudySet — only {id,is_saved}, which is fine for the current UI contract."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_save_feature.py"
+  ],
+  "success_rate": {"backend": "100% (21/21)", "frontend": "100% of iteration-2 testIDs verified; all flows pass"},
+  "seed_data_creation": "Left 1 study set marked is_saved=true in the DB at test end (TEST_Custom Set, saved via UI). Pytest cleanup toggles test-saved sets back, so DB remains clean of pytest-added saves. TEST_Custom Set created by previous iteration still present (x2).",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "All iteration-2 features verified on mobile 390x844. Save endpoint + saved filter are covered by /app/backend/tests/test_save_feature.py. Theme persists under AsyncStorage key 'focuslearn.theme.mode'. Preview modal uses study-now + save-wallet testIDs. When testing flashcards via Practice tab, note that practice-card-* goes directly into quiz generation (~8-10s AI). Use marketplace → card → preview-study-now to reach the flashcard screen (testID flashcard-*). No auth used.",
+  "rca_of_issue": "No bugs found. Minor note: in the first Playwright pass I looked for testID 'get-started-button' but the actual testID is 'onboarding-start-button' (per app/index.tsx line 45). Test fixed in subsequent runs."
+}
